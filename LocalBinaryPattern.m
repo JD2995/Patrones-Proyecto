@@ -20,6 +20,8 @@ function histo = LocalBinaryPattern(img)
        end
     end
     histo = histograma(result);
+    colormap('Gray');
+    imagesc(result);
 end
 
 function histo = histograma(imagen)

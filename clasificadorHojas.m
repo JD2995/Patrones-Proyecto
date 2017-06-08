@@ -1,6 +1,12 @@
-function clasificadorHojas
-    %[X,T] = procesarDatos;
-    load('datosSinDBF.mat');
+function clasificadorHojas(isMadeData, isFiltered)
+    if(isMadeData)
+        [X,T] = procesarDatos(isFiltered);
+    end
+    if(isFiltered)
+        load('datosConDBF.mat');
+    else
+        load('datosSinDBF.mat');
+    end
     X = X';
     T = T';
     [Xtrain, Xvalid, Ttrain, Tvalid] = generarDatosPruebas(X, T);
@@ -15,7 +21,9 @@ function clasificadorHojas
 %     porcentaje = validarPorcentaje(y,Ttrain)
     
     net = feedforwardnet(59);
-    net.trainParam.max_fail = 1000;
+    net.trainParam.max_fail = 10000;
+    net.trainParam.epochs=10000;
+    net.trainParam.min_grad = 1e-12;
     net = train(net,Xtrain,Ttrain,'useGPU', 'yes');
     y = abs(round(net(Xvalid)));
     porcentaje = validarPorcentaje(y,Tvalid)
@@ -48,7 +56,7 @@ function [Xtrain, Xvalid, Ttrain, Tvalid] = generarDatosPruebas(X, T)
     Tvalid = T(:,indValidacion);
 end
 
-function [X,T] = procesarDatos
+function [X,T] = procesarDatos(isFiltered)
     path = {'All_CR_Leaves_Cleaned\Aegiphila valerioi\';'All_CR_Leaves_Cleaned\Bauhinia ungulata\';
         'All_CR_Leaves_Cleaned\Bixa orellana\';'All_CR_Leaves_Cleaned\Ficus pumila\';
         'All_CR_Leaves_Cleaned\Morus alba\'};
@@ -65,12 +73,25 @@ function [X,T] = procesarDatos
             fil = 150;
             col = 375;
             img = imresize(img, [fil col]);     %Normaliza el tamanno de la imagen
+            %Segmenta la imagen con Kittler
             img = Kittler(img);
+            %Aplica el filtro DBF
+            img = double(img);
+            windowSize = 29;
+            [i,j] = size(img);
+            %Si se filtra con el DBF
+            if(isFiltered)
+                img = bilateral(img);
+            end
             X = [X ; LocalBinaryPattern(img)];
             T = [T ; generarKClases(cantClases,p)];
         end 
     end
-    save('datosSinDBF.mat','X','T');
+    if(isFiltered)
+       save('datosConDBF.mat','X','T');
+    else
+       save('datosSinDBF.mat','X','T'); 
+    end
 end
 
 function t = generarKClases(cantClases, clase)

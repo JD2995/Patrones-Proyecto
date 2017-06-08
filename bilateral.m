@@ -1,16 +1,12 @@
-function bilateral()
-    colormap('Gray');
-    img = imread('Lena.PNG');
-    imgGS = rgb2gray(img);
-    imgGS = double(imgGS);
+function imgFDB = bilateral(imgGS)
     windowSize = 29;
     [i,j] = size(imgGS);
     imgPadding = padding(windowSize, imgGS, i, j);
     imgFDB = filtroDeceivedBilateral(windowSize, imgPadding, 12, i, j);
-    maxx = max(imgFDB(:));
-    imgFDB = imgFDB/maxx;
-    imgFDB = imgFDB*255;
-    imagesc(uint8(imgFDB));
+%     maxx = max(imgFDB(:));
+%     imgFDB = imgFDB/maxx;
+%     imgFDB = imgFDB*255;
+    imgFDB = uint8(imgFDB);
 end
 
 function imgUSM = USM(img, lambda)
